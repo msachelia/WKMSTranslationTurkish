@@ -11,7 +11,7 @@ using WKMSTranslation.Hooks;
 
 namespace WKMSTranslation
 {
-    [BepInPlugin("com.musya.wk.translation", "WKMSTranslation", "1.3.3")]
+    [BepInPlugin("com.musya.wk.translation", "WKMSTranslation", "1.3.4")]
     public class Plugin : BaseUnityPlugin
     {
         private void Awake()
@@ -37,6 +37,15 @@ namespace WKMSTranslation
                 RefreshUI(false);
             }
             if (Input.GetKeyDown(KeyCode.F11)) Exporter.Save();
+            if (Input.GetKeyDown(KeyCode.F12)) DumpSceneTextInfo();
+        }
+
+        private void DumpSceneTextInfo()
+        {
+            string dir = Path.GetDirectoryName(Info.Location);
+            if (string.IsNullOrEmpty(dir)) return;
+
+            SceneTextDumper.DumpSceneTextInfo(dir);
         }
 
         private void RefreshUI(bool forceReset)
@@ -62,8 +71,8 @@ namespace WKMSTranslation
                     }
 
                     TranslationEngine.SetAssignedTranslation(txt, target);
-                    anim.textFull = target; 
-                    
+                    anim.textFull = target;
+
                     if (TranslationEngine.IsEnabled)
                     {
                         FontManager.TryReplace(txt);
@@ -124,9 +133,9 @@ namespace WKMSTranslation
                 string orig = TranslationEngine.GetOriginal(input, input.text);
                 string target = TranslationEngine.IsEnabled ? TranslationEngine.GetTranslation(orig) : orig;
                 if (TranslationEngine.IsAssignedTranslation(input, target)) continue;
-                
+
                 TranslationEngine.SetAssignedTranslation(input, target);
-                input.text = target; 
+                input.text = target;
             }
 
             foreach (var tmpInput in Resources.FindObjectsOfTypeAll<TMP_InputField>())
@@ -135,7 +144,7 @@ namespace WKMSTranslation
                 string orig = TranslationEngine.GetOriginal(tmpInput, tmpInput.text);
                 string target = TranslationEngine.IsEnabled ? TranslationEngine.GetTranslation(orig) : orig;
                 if (TranslationEngine.IsAssignedTranslation(tmpInput, target)) continue;
-                
+
                 TranslationEngine.SetAssignedTranslation(tmpInput, target);
                 tmpInput.text = target;
             }

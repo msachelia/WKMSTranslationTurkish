@@ -45,6 +45,9 @@
     <Reference Include="UnityEngine.InputModule">
       <HintPath>Assembly\Unity.UnityEngine.InputModule.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>Assembly\Unity.InputSystem.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
       <HintPath>Assembly\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>

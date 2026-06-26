@@ -39,28 +39,20 @@ namespace WKMSTranslation.Hooks
         public static class TAnimCore_ConvertText_Hook
         {
             [HarmonyPrefix]
-            public static void Prefix(ref string textToParse)
+            public static void Prefix(TAnimCore __instance, ref string textToParse)
             {
-                if (!string.IsNullOrWhiteSpace(textToParse)) textToParse = TranslationEngine.GetTranslation(textToParse);
+                if (!string.IsNullOrWhiteSpace(textToParse)) 
+                    textToParse = TranslationEngine.GetTranslation(textToParse);
+                
+                if (__instance is TextAnimator_TMP animTmp && animTmp.TMProComponent != null)
+                {
+                    if (TranslationEngine.IsEnabled)
+                        FontManager.TryReplace(animTmp.TMProComponent);
+                }
+                
                 ThirdPartyDepth++;
             }
             [HarmonyFinalizer] public static void Finalizer() => ThirdPartyDepth--;
-        }
-
-        [HarmonyPatch(typeof(TextAnimator_TMP), "SetTextToSource")]
-        public static class TextAnimator_SetText_Hook
-        {
-            [HarmonyPrefix] public static void Prefix() => ThirdPartyDepth++;
-            
-            [HarmonyFinalizer]
-            public static void Finalizer(TextAnimator_TMP __instance)
-            {
-                ThirdPartyDepth--;
-                if (__instance != null && __instance.TMProComponent != null && TranslationEngine.IsEnabled)
-                {
-                    FontManager.TryReplace(__instance.TMProComponent);
-                }
-            }
         }
     }
 }
