@@ -1,6 +1,7 @@
 using BepInEx;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.IO;
 using WKMSTranslation.Core;
 using WKMSTranslation.Utils;
@@ -11,7 +12,7 @@ using WKMSTranslation.Hooks;
 
 namespace WKMSTranslation
 {
-    [BepInPlugin("com.musya.wk.translation", "WKMSTranslation", "1.3.4")]
+    [BepInPlugin("com.musya.wk.translation", "WKMSTranslation", "1.3.5")]
     public class Plugin : BaseUnityPlugin
     {
         private void Awake()
@@ -19,9 +20,21 @@ namespace WKMSTranslation
             string dir = Path.GetDirectoryName(Info.Location);
             TranslationEngine.Initialize(dir);
             FontManager.Initialize(Logger, dir);
+            AssetManager.Initialize(Logger, dir);
             Exporter.Initialize(dir);
             Harmony.CreateAndPatchAll(typeof(Plugin).Assembly);
             PlayerLoopHelper.Inject(typeof(Plugin), MyUpdate);
+
+            // Подписываемся на загрузку новой сцены для авто-замены ассетов
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (TranslationEngine.IsEnabled)
+            {
+                AssetManager.ReplaceAllAssetsInScene();
+            }
         }
 
         private void MyUpdate()
@@ -51,6 +64,12 @@ namespace WKMSTranslation
         private void RefreshUI(bool forceReset)
         {
             TextProcessor.IsPatching = true;
+
+            // Заменяем картинки и аудио вручную при нажатии кнопок
+            if (TranslationEngine.IsEnabled)
+            {
+                AssetManager.ReplaceAllAssetsInScene();
+            }
 
             foreach (var txt in Resources.FindObjectsOfTypeAll<TMP_Text>())
             {

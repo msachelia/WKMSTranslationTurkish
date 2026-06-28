@@ -87,7 +87,6 @@ namespace WKMSTranslation.Core
                 AdditionalInfo = CreateTextMaterialInfo(txt.fontSharedMaterial!)
             };
 
-            // Проверка на наличие Febucci компонентов
             var tAnim = txt.GetComponent<TAnimCore>();
             if (tAnim != null) entry.AdditionalInfo["Febucci_TextAnimator"] = tAnim.GetType().Name;
             

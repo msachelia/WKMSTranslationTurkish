@@ -17,7 +17,8 @@ namespace WKMSTranslation.Hooks
             [HarmonyPrefix]
             public static void Prefix(ref string s)
             {
-                if (!string.IsNullOrWhiteSpace(s)) s = TranslationEngine.GetTranslation(s);
+                if (!string.IsNullOrWhiteSpace(s) && !TranslationEngine.IsCyrillic(s)) 
+                    s = TranslationEngine.GetTranslation(s);
                 ThirdPartyDepth++;
             }
             [HarmonyFinalizer] public static void Finalizer() => ThirdPartyDepth--;
@@ -29,7 +30,8 @@ namespace WKMSTranslation.Hooks
             [HarmonyPrefix]
             public static void Prefix(ref string text)
             {
-                if (!string.IsNullOrWhiteSpace(text)) text = TranslationEngine.GetTranslation(text);
+                if (!string.IsNullOrWhiteSpace(text) && !TranslationEngine.IsCyrillic(text)) 
+                    text = TranslationEngine.GetTranslation(text);
                 ThirdPartyDepth++;
             }
             [HarmonyFinalizer] public static void Finalizer() => ThirdPartyDepth--;
@@ -41,7 +43,7 @@ namespace WKMSTranslation.Hooks
             [HarmonyPrefix]
             public static void Prefix(TAnimCore __instance, ref string textToParse)
             {
-                if (!string.IsNullOrWhiteSpace(textToParse)) 
+                if (!string.IsNullOrWhiteSpace(textToParse) && !TranslationEngine.IsCyrillic(textToParse)) 
                     textToParse = TranslationEngine.GetTranslation(textToParse);
                 
                 if (__instance is TextAnimator_TMP animTmp && animTmp.TMProComponent != null)
