@@ -280,8 +280,27 @@ namespace WKMSTranslation.Core
 
             string exactKey = currentText.GetExactKey();
 
+            bool hasNoparse = currentText.TrimStart().StartsWith("<noparse></noparse>", StringComparison.OrdinalIgnoreCase);
+
+            string result = ProcessTranslation(exactKey);
+
+            if (result != exactKey)
+            {
+                if (hasNoparse && !result.TrimStart().StartsWith("<noparse></noparse>", StringComparison.OrdinalIgnoreCase))
+                {
+                    result = "<noparse></noparse>" + result;
+                }
+
+                return _cache[currentText] = result;
+            }
+
+            return _cache[currentText] = currentText;
+        }
+
+        private static string ProcessTranslation(string exactKey)
+        {
             if (_exact.TryGetValue(exactKey, out var exactTranslation))
-                return _cache[currentText] = exactTranslation.Replace("\\n", "\n");
+                return exactTranslation.Replace("\\n", "\n");
 
             string cleaned = exactKey.Replace("\\n", "\n");
 
@@ -309,7 +328,7 @@ namespace WKMSTranslation.Core
                         result = result.Replace("{" + t.GroupPlaceholders[i - 1] + "}", match.Groups[i].Value);
 
                     if (_fitKeys.Contains(t.OriginalPattern)) _fitKeys.Add(exactKey);
-                    return _cache[currentText] = result.Replace("\\n", "\n");
+                    return result.Replace("\\n", "\n");
                 }
             }
 
@@ -385,10 +404,10 @@ namespace WKMSTranslation.Core
 
             if (anyTranslated)
             {
-                return _cache[currentText] = workingText.Replace("\\n", "\n");
+                return workingText.Replace("\\n", "\n");
             }
 
-            return _cache[currentText] = currentText;
+            return exactKey;
         }
 
         public static void SetAssignedTranslation(object ui, string translatedText)

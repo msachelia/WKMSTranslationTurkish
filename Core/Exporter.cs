@@ -20,23 +20,6 @@ namespace WKMSTranslation.Core
 
         private static readonly Regex _garbageFilter = new(@"^[.\-_~=\s\/\\|:;()\[\]{}*+?!@#$%^&<>,""']*$", RegexOptions.Compiled);
 
-        private static readonly HashSet<string> _ignoredKeywords = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "Shift", "Tab", "Space", "Ctrl", "Alt", "Enter", "Escape", "Caps", "Backspace",
-            "LMB", "RMB", "MMB", "Wheel", "WheelUp", "WheelDown", "M4", "M5",
-            "Up", "Down", "Left", "Right", "W", "A", "S", "D",
-            "Insert", "Delete", "Home", "End", "PageUp", "PageDown", "PrintScreen", "ScrollLock", "Pause",
-            "NumLock", "NumSlash", "NumStar", "NumMinus", "NumPlus", "NumEnter",
-            "Num0", "Num1", "Num2", "Num3", "Num4", "Num5", "Num6", "Num7", "Num8", "Num9",
-            "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
-            "Win", "Cmd", "Fn", "Tilde",
-            "LB", "RB", "LT", "RT", "L1", "R1", "L2", "R2", "L3", "R3",
-            "D-PadUp", "D-PadDown", "D-PadLeft", "D-PadRight",
-            "A", "B", "X", "Y", "Cross", "Circle", "Square", "Triangle",
-            "LS", "RS", "LS-Click", "RS-Click", "LeftStick", "RightStick",
-            "Start", "Select", "Back", "Options", "Share", "Menu", "View", "Guide", "Home", "Touchpad"
-        };
-
         public static void Initialize(string path) => _folder = path;
 
         public static void Register(string text)
@@ -52,8 +35,6 @@ namespace WKMSTranslation.Core
             if (_garbageFilter.IsMatch(key)) return;
 
             if (key.StartsWith("<") && key.EndsWith(">") && !key.Contains(" ")) return;
-
-            if (_ignoredKeywords.Contains(key)) return;
 
             if (Regex.IsMatch(key, @"^[+-]?\d+(?:[.,]\d+)?$")) return;
             if (Regex.IsMatch(key, @"^\d{1,2}(?::\d{1,2}){1,3}$")) return;
@@ -121,9 +102,28 @@ namespace WKMSTranslation.Core
             try
             {
                 foreach (var txt in Resources.FindObjectsOfTypeAll<TMP_Text>())
-                    if (txt.gameObject.activeInHierarchy && !string.IsNullOrEmpty(txt.text)) Register(txt.text);
+                {
+                    if (!txt.gameObject.activeInHierarchy) continue;
+
+                    string textToDump = txt.text;
+
+                    var tAnim = txt.GetComponent<Febucci.UI.Core.TAnimCore>();
+                    if (tAnim != null && !string.IsNullOrEmpty(tAnim.textFull))
+                    {
+                        textToDump = tAnim.textFull;
+                    }
+
+                    if (!string.IsNullOrEmpty(textToDump)) 
+                        Register(textToDump);
+                }
+
                 foreach (var txt in Resources.FindObjectsOfTypeAll<Text>())
-                    if (txt.gameObject.activeInHierarchy && !string.IsNullOrEmpty(txt.text)) Register(txt.text);
+                {
+                    if (!txt.gameObject.activeInHierarchy) continue;
+
+                    if (!string.IsNullOrEmpty(txt.text)) 
+                        Register(txt.text);
+                }
             }
             catch { }
         }

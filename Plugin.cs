@@ -1,6 +1,7 @@
 using BepInEx;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.IO;
 using WKMSTranslation.Core;
 using WKMSTranslation.Utils;
@@ -11,7 +12,7 @@ using WKMSTranslation.Hooks;
 
 namespace WKMSTranslation
 {
-    [BepInPlugin("com.musya.wk.translation", "WKMSTranslation", "1.3.3")]
+    [BepInPlugin("com.musya.wk.translation", "WKMSTranslation", "1.3.5")]
     public class Plugin : BaseUnityPlugin
     {
         private void Awake()
@@ -19,9 +20,21 @@ namespace WKMSTranslation
             string dir = Path.GetDirectoryName(Info.Location);
             TranslationEngine.Initialize(dir);
             FontManager.Initialize(Logger, dir);
+            AssetManager.Initialize(Logger, dir);
             Exporter.Initialize(dir);
             Harmony.CreateAndPatchAll(typeof(Plugin).Assembly);
             PlayerLoopHelper.Inject(typeof(Plugin), MyUpdate);
+
+            // Подписываемся на загрузку новой сцены для авто-замены ассетов
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (TranslationEngine.IsEnabled)
+            {
+                AssetManager.ReplaceAllAssetsInScene();
+            }
         }
 
         private void MyUpdate()
@@ -37,11 +50,26 @@ namespace WKMSTranslation
                 RefreshUI(false);
             }
             if (Input.GetKeyDown(KeyCode.F11)) Exporter.Save();
+            if (Input.GetKeyDown(KeyCode.F12)) DumpSceneTextInfo();
+        }
+
+        private void DumpSceneTextInfo()
+        {
+            string dir = Path.GetDirectoryName(Info.Location);
+            if (string.IsNullOrEmpty(dir)) return;
+
+            SceneTextDumper.DumpSceneTextInfo(dir);
         }
 
         private void RefreshUI(bool forceReset)
         {
             TextProcessor.IsPatching = true;
+
+            // Заменяем картинки и аудио вручную при нажатии кнопок
+            if (TranslationEngine.IsEnabled)
+            {
+                AssetManager.ReplaceAllAssetsInScene();
+            }
 
             foreach (var txt in Resources.FindObjectsOfTypeAll<TMP_Text>())
             {
@@ -62,8 +90,8 @@ namespace WKMSTranslation
                     }
 
                     TranslationEngine.SetAssignedTranslation(txt, target);
-                    anim.textFull = target; 
-                    
+                    anim.textFull = target;
+
                     if (TranslationEngine.IsEnabled)
                     {
                         FontManager.TryReplace(txt);
@@ -124,9 +152,9 @@ namespace WKMSTranslation
                 string orig = TranslationEngine.GetOriginal(input, input.text);
                 string target = TranslationEngine.IsEnabled ? TranslationEngine.GetTranslation(orig) : orig;
                 if (TranslationEngine.IsAssignedTranslation(input, target)) continue;
-                
+
                 TranslationEngine.SetAssignedTranslation(input, target);
-                input.text = target; 
+                input.text = target;
             }
 
             foreach (var tmpInput in Resources.FindObjectsOfTypeAll<TMP_InputField>())
@@ -135,7 +163,7 @@ namespace WKMSTranslation
                 string orig = TranslationEngine.GetOriginal(tmpInput, tmpInput.text);
                 string target = TranslationEngine.IsEnabled ? TranslationEngine.GetTranslation(orig) : orig;
                 if (TranslationEngine.IsAssignedTranslation(tmpInput, target)) continue;
-                
+
                 TranslationEngine.SetAssignedTranslation(tmpInput, target);
                 tmpInput.text = target;
             }
